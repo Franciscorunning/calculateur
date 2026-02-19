@@ -23,54 +23,11 @@ body {
 .input-group { flex:1; position:relative; }
 label { display:block; margin-bottom:6px; color:#34495e; font-weight:500; font-size:14px; }
 .helper-text { display:block; margin-bottom:6px; color:#7f8c8d; font-size:11px; font-style:italic; }
-select, input[type="number"] {
+select, input[type="number"], input[type="time"] {
   width:100%; padding:12px; border:1px solid #bdc3c7; border-radius:12px;
-  font-size:16px; appearance:none; background:white;
-  -webkit-appearance: none; -moz-appearance: none;
+  font-size:16px; background:white;
 }
 select:focus, input:focus { outline:none; border-color:#3498db; }
-
-/* Style pour le picker de temps natif */
-.time-input-group {
-  margin-top: 20px;
-}
-.time-input-row {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-}
-.time-input-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.time-input-label {
-  font-size: 12px;
-  color: #7f8c8d;
-  font-weight: 500;
-  margin-bottom: 8px;
-  text-align: center;
-}
-.time-select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #bdc3c7;
-  border-radius: 12px;
-  font-size: 20px;
-  font-weight: 600;
-  text-align: center;
-  background: white;
-  color: #2c3e50;
-  cursor: pointer;
-  -webkit-appearance: menulist;
-  -moz-appearance: menulist;
-  appearance: menulist;
-}
-.time-select:focus {
-  outline: none;
-  border-color: #3498db;
-}
 
 button {
   width:100%; padding:14px; background:#2c3e50; color:white; border:none; border-radius:12px;
@@ -152,35 +109,10 @@ button.secondary:hover { background: #7f8c8d; }
       <input type="number" id="customDistance" class="custom-distance" step="0.01" placeholder="Entrez votre distance (km)">
     </div>
 
-    <div class="time-input-group">
+    <div class="input-group" style="margin-top:20px;">
       <label>Temps de course</label>
       <span class="helper-text">Entrez votre temps de course</span>
-      <div class="time-input-row">
-        <div class="time-input-wrapper">
-          <div class="time-input-label">h</div>
-          <select class="time-select" id="hours">
-            <option value="0">0</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-            <option value="9">9</option>
-            <option value="10">10</option>
-          </select>
-        </div>
-        <div class="time-input-wrapper">
-          <div class="time-input-label">min</div>
-          <select class="time-select" id="minutes"></select>
-        </div>
-        <div class="time-input-wrapper">
-          <div class="time-input-label">sec</div>
-          <select class="time-select" id="seconds"></select>
-        </div>
-      </div>
+      <input type="time" id="timeInput" step="1" value="00:25:00">
     </div>
 
     <button onclick="calculate()">Calculer</button>
@@ -208,15 +140,6 @@ button.secondary:hover { background: #7f8c8d; }
 </div>
 
 <script>
-// Remplissage des selects natifs pour minutes et secondes
-const minutesSelect = document.getElementById('minutes');
-const secondsSelect = document.getElementById('seconds');
-
-for(let i = 0; i < 60; i++) {
-  minutesSelect.innerHTML += `<option value="${i}">${i}</option>`;
-  secondsSelect.innerHTML += `<option value="${i}">${i}</option>`;
-}
-
 // Distance "Autre"
 const distanceSelect = document.getElementById('distance');
 const customDistance = document.getElementById('customDistance');
@@ -260,10 +183,11 @@ function calculate(){
     if(isNaN(distance)||distance<=0){ alert('Entrez une distance valide'); return; }
   }
 
-  const h = parseInt(document.getElementById('hours').value) || 0;
-  const m = parseInt(document.getElementById('minutes').value) || 0;
-  const s = parseInt(document.getElementById('seconds').value) || 0;
-  const totalSec = h*3600 + m*60 + s;
+  const timeValue = document.getElementById('timeInput').value;
+  if(!timeValue){ alert('Entrez un temps valide'); return; }
+  
+  const [hours, minutes, seconds] = timeValue.split(':').map(Number);
+  const totalSec = hours*3600 + minutes*60 + (seconds || 0);
   
   if(totalSec===0){ alert('Entrez un temps valide'); return; }
 
@@ -292,9 +216,7 @@ function calculate(){
 
 function clearResults() {
   document.getElementById('results').classList.remove('show');
-  document.getElementById('hours').value = '0';
-  document.getElementById('minutes').value = '0';
-  document.getElementById('seconds').value = '0';
+  document.getElementById('timeInput').value = '00:25:00';
   distanceSelect.value = '5000';
   customDistance.style.display = 'none';
   customDistance.value = '';
