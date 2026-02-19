@@ -28,159 +28,50 @@ select, input[type="number"] {
   font-size:16px; appearance:none; background:white;
   -webkit-appearance: none; -moz-appearance: none;
 }
+select:focus, input:focus { outline:none; border-color:#3498db; }
 
-/* Style picker unique pour le temps */
-.time-picker-single {
-  position: relative;
-  width: 100%;
-  padding: 16px;
-  border: 1px solid #bdc3c7;
-  border-radius: 12px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
+/* Style pour le picker de temps natif */
+.time-input-group {
+  margin-top: 20px;
 }
-.time-picker-single:active {
-  background: #f8f9fa;
-}
-.time-display {
-  font-size: 24px;
-  font-weight: 600;
-  color: #2c3e50;
-  letter-spacing: 1px;
-}
-.time-label {
-  font-size: 12px;
-  color: #7f8c8d;
-  margin-top: 4px;
-}
-
-/* Modal picker */
-.picker-backdrop {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 1000;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.picker-backdrop.active {
-  display: block;
-  opacity: 1;
-}
-.picker-modal {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #f7f7f7;
-  z-index: 1001;
-  transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 14px 14px 0 0;
-}
-.picker-modal.active {
-  transform: translateY(0);
-}
-.picker-toolbar {
-  background: #f7f7f7;
-  border-bottom: 1px solid #d1d1d6;
+.time-input-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 16px;
-  height: 44px;
+  gap: 10px;
+  align-items: flex-end;
 }
-.picker-button {
-  color: #007aff;
-  font-size: 17px;
-  background: none;
-  border: none;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-weight: 400;
-}
-.picker-button:active {
-  opacity: 0.4;
-}
-.picker-title {
-  font-size: 13px;
-  color: #8e8e93;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.picker-content {
-  height: 216px;
-  position: relative;
-  background: #f7f7f7;
-  overflow: hidden;
-  display: flex;
-  gap: 8px;
-  padding: 0 20px;
-}
-.picker-highlight {
-  position: absolute;
-  top: 50%;
-  left: 20px;
-  right: 20px;
-  height: 36px;
-  margin-top: -18px;
-  background: rgba(0, 0, 0, 0.06);
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  pointer-events: none;
-  z-index: 1;
-}
-.picker-column-container {
+.time-input-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.picker-column-label {
-  position: absolute;
-  top: 50%;
-  margin-top: 22px;
+.time-input-label {
   font-size: 12px;
-  color: #8e8e93;
+  color: #7f8c8d;
   font-weight: 500;
-  z-index: 2;
-  pointer-events: none;
+  margin-bottom: 8px;
+  text-align: center;
 }
-.picker-column {
-  height: 100%;
+.time-select {
   width: 100%;
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: y mandatory;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  padding: 12px;
+  border: 1px solid #bdc3c7;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  background: white;
+  color: #2c3e50;
+  cursor: pointer;
+  -webkit-appearance: menulist;
+  -moz-appearance: menulist;
+  appearance: menulist;
 }
-.picker-column::-webkit-scrollbar {
-  display: none;
-}
-.picker-item {
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  color: #000;
-  scroll-snap-align: center;
-  transition: opacity 0.2s;
-}
-.picker-spacer {
-  height: 90px;
-  pointer-events: none;
+.time-select:focus {
+  outline: none;
+  border-color: #3498db;
 }
 
-select:focus, input:focus { outline:none; border-color:#3498db; }
 button {
   width:100%; padding:14px; background:#2c3e50; color:white; border:none; border-radius:12px;
   font-size:16px; font-weight:500; cursor:pointer; margin-top:10px; transition:0.2s;
@@ -261,12 +152,34 @@ button.secondary:hover { background: #7f8c8d; }
       <input type="number" id="customDistance" class="custom-distance" step="0.01" placeholder="Entrez votre distance (km)">
     </div>
 
-    <div class="input-group" style="margin-top:20px;">
-      <label>Temps réalisé</label>
+    <div class="time-input-group">
+      <label>Temps de course</label>
       <span class="helper-text">Entrez votre temps de course</span>
-      <div class="time-picker-single" id="timePicker">
-        <div class="time-display" id="timeDisplay">00:00:00</div>
-        <div class="time-label">Appuyez pour modifier</div>
+      <div class="time-input-row">
+        <div class="time-input-wrapper">
+          <div class="time-input-label">h</div>
+          <select class="time-select" id="hours">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+        <div class="time-input-wrapper">
+          <div class="time-input-label">min</div>
+          <select class="time-select" id="minutes"></select>
+        </div>
+        <div class="time-input-wrapper">
+          <div class="time-input-label">sec</div>
+          <select class="time-select" id="seconds"></select>
+        </div>
       </div>
     </div>
 
@@ -294,38 +207,15 @@ button.secondary:hover { background: #7f8c8d; }
   </div>
 </div>
 
-<!-- Picker backdrop -->
-<div class="picker-backdrop" id="pickerBackdrop"></div>
-
-<!-- Picker modal -->
-<div class="picker-modal" id="pickerModal">
-  <div class="picker-toolbar">
-    <button class="picker-button" id="pickerCancel">Annuler</button>
-    <div class="picker-title">Temps de course</div>
-    <button class="picker-button" id="pickerDone" style="font-weight: 600;">OK</button>
-  </div>
-  <div class="picker-content">
-    <div class="picker-highlight"></div>
-    <div class="picker-column-container">
-      <div class="picker-column" id="hoursColumn"></div>
-      <div class="picker-column-label">h</div>
-    </div>
-    <div class="picker-column-container">
-      <div class="picker-column" id="minutesColumn"></div>
-      <div class="picker-column-label">min</div>
-    </div>
-    <div class="picker-column-container">
-      <div class="picker-column" id="secondsColumn"></div>
-      <div class="picker-column-label">sec</div>
-    </div>
-  </div>
-</div>
-
 <script>
-// Variables globales
-let selectedHours = 0;
-let selectedMinutes = 0;
-let selectedSeconds = 0;
+// Remplissage des selects natifs pour minutes et secondes
+const minutesSelect = document.getElementById('minutes');
+const secondsSelect = document.getElementById('seconds');
+
+for(let i = 0; i < 60; i++) {
+  minutesSelect.innerHTML += `<option value="${i}">${i}</option>`;
+  secondsSelect.innerHTML += `<option value="${i}">${i}</option>`;
+}
 
 // Distance "Autre"
 const distanceSelect = document.getElementById('distance');
@@ -333,169 +223,6 @@ const customDistance = document.getElementById('customDistance');
 distanceSelect.addEventListener('change',()=>{
   if(distanceSelect.value==='other'){ customDistance.style.display='block'; } else { customDistance.style.display='none'; }
 });
-
-// Initialisation du picker
-function initPicker() {
-  document.getElementById('timePicker').addEventListener('click', openPicker);
-  document.getElementById('pickerBackdrop').addEventListener('click', closePicker);
-  document.getElementById('pickerCancel').addEventListener('click', closePicker);
-  document.getElementById('pickerDone').addEventListener('click', confirmPicker);
-}
-
-function openPicker() {
-  const modal = document.getElementById('pickerModal');
-  const backdrop = document.getElementById('pickerBackdrop');
-  const hoursColumn = document.getElementById('hoursColumn');
-  const minutesColumn = document.getElementById('minutesColumn');
-  const secondsColumn = document.getElementById('secondsColumn');
-  
-  // Remplir les colonnes
-  hoursColumn.innerHTML = '<div class="picker-spacer"></div>';
-  for(let i = 0; i <= 10; i++) {
-    hoursColumn.innerHTML += `<div class="picker-item" data-value="${i}">${i}</div>`;
-  }
-  hoursColumn.innerHTML += '<div class="picker-spacer"></div>';
-  
-  minutesColumn.innerHTML = '<div class="picker-spacer"></div>';
-  for(let i = 0; i < 60; i++) {
-    minutesColumn.innerHTML += `<div class="picker-item" data-value="${i}">${i}</div>`;
-  }
-  minutesColumn.innerHTML += '<div class="picker-spacer"></div>';
-  
-  secondsColumn.innerHTML = '<div class="picker-spacer"></div>';
-  for(let i = 0; i < 60; i++) {
-    secondsColumn.innerHTML += `<div class="picker-item" data-value="${i}">${i}</div>`;
-  }
-  secondsColumn.innerHTML += '<div class="picker-spacer"></div>';
-  
-  // Afficher
-  backdrop.classList.add('active');
-  modal.classList.add('active');
-  document.body.style.overflow = 'hidden';
-  
-  // Positionner sur les valeurs actuelles
-  setTimeout(() => {
-    scrollToValue(hoursColumn, selectedHours);
-    scrollToValue(minutesColumn, selectedMinutes);
-    scrollToValue(secondsColumn, selectedSeconds);
-    
-    setupPickerScroll(hoursColumn);
-    setupPickerScroll(minutesColumn);
-    setupPickerScroll(secondsColumn);
-  }, 50);
-}
-
-function scrollToValue(column, value) {
-  const items = column.querySelectorAll('.picker-item');
-  const targetItem = Array.from(items).find(item => parseInt(item.dataset.value) === value);
-  if (targetItem) {
-    targetItem.scrollIntoView({ block: 'center' });
-  }
-}
-
-function setupPickerScroll(column) {
-  let scrollTimeout;
-  
-  const updateOpacity = () => {
-    const items = column.querySelectorAll('.picker-item');
-    const columnRect = column.getBoundingClientRect();
-    const centerY = columnRect.top + columnRect.height / 2;
-    
-    items.forEach(item => {
-      const itemRect = item.getBoundingClientRect();
-      const itemCenterY = itemRect.top + itemRect.height / 2;
-      const distance = Math.abs(centerY - itemCenterY);
-      const maxDistance = 72;
-      const opacity = Math.max(0.3, 1 - (distance / maxDistance) * 0.7);
-      item.style.opacity = opacity;
-    });
-  };
-  
-  const snapToCenter = () => {
-    const items = column.querySelectorAll('.picker-item');
-    const columnRect = column.getBoundingClientRect();
-    const centerY = columnRect.top + columnRect.height / 2;
-    
-    let closestItem = null;
-    let closestDistance = Infinity;
-    
-    items.forEach(item => {
-      const itemRect = item.getBoundingClientRect();
-      const itemCenterY = itemRect.top + itemRect.height / 2;
-      const distance = Math.abs(centerY - itemCenterY);
-      
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestItem = item;
-      }
-    });
-    
-    if (closestItem) {
-      closestItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  };
-  
-  column.addEventListener('scroll', () => {
-    updateOpacity();
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(() => {
-      snapToCenter();
-    }, 100);
-  });
-  
-  updateOpacity();
-}
-
-function closePicker() {
-  const modal = document.getElementById('pickerModal');
-  const backdrop = document.getElementById('pickerBackdrop');
-  
-  modal.classList.remove('active');
-  backdrop.classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-function getSelectedValue(column) {
-  const items = column.querySelectorAll('.picker-item');
-  const columnRect = column.getBoundingClientRect();
-  const centerY = columnRect.top + columnRect.height / 2;
-  
-  let selectedItem = null;
-  let closestDistance = Infinity;
-  
-  items.forEach(item => {
-    const itemRect = item.getBoundingClientRect();
-    const itemCenterY = itemRect.top + itemRect.height / 2;
-    const distance = Math.abs(centerY - itemCenterY);
-    
-    if (distance < closestDistance) {
-      closestDistance = distance;
-      selectedItem = item;
-    }
-  });
-  
-  return selectedItem ? parseInt(selectedItem.dataset.value) : 0;
-}
-
-function confirmPicker() {
-  const hoursColumn = document.getElementById('hoursColumn');
-  const minutesColumn = document.getElementById('minutesColumn');
-  const secondsColumn = document.getElementById('secondsColumn');
-  
-  selectedHours = getSelectedValue(hoursColumn);
-  selectedMinutes = getSelectedValue(minutesColumn);
-  selectedSeconds = getSelectedValue(secondsColumn);
-  
-  updateTimeDisplay();
-  closePicker();
-}
-
-function updateTimeDisplay() {
-  const h = selectedHours.toString().padStart(2, '0');
-  const m = selectedMinutes.toString().padStart(2, '0');
-  const s = selectedSeconds.toString().padStart(2, '0');
-  document.getElementById('timeDisplay').textContent = `${h}:${m}:${s}`;
-}
 
 // Formules VO2max avec ajustement marathon à 3.5%
 function calculateVO2(v){ return -4.60 + 0.182258*v + 0.000104*v**2; }
@@ -533,9 +260,9 @@ function calculate(){
     if(isNaN(distance)||distance<=0){ alert('Entrez une distance valide'); return; }
   }
 
-  const h = selectedHours;
-  const m = selectedMinutes;
-  const s = selectedSeconds;
+  const h = parseInt(document.getElementById('hours').value) || 0;
+  const m = parseInt(document.getElementById('minutes').value) || 0;
+  const s = parseInt(document.getElementById('seconds').value) || 0;
   const totalSec = h*3600 + m*60 + s;
   
   if(totalSec===0){ alert('Entrez un temps valide'); return; }
@@ -565,17 +292,13 @@ function calculate(){
 
 function clearResults() {
   document.getElementById('results').classList.remove('show');
-  selectedHours = 0;
-  selectedMinutes = 0;
-  selectedSeconds = 0;
-  updateTimeDisplay();
+  document.getElementById('hours').value = '0';
+  document.getElementById('minutes').value = '0';
+  document.getElementById('seconds').value = '0';
   distanceSelect.value = '5000';
   customDistance.style.display = 'none';
   customDistance.value = '';
 }
-
-// Initialisation
-initPicker();
 </script>
 </body>
 </html>
