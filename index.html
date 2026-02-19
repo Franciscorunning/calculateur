@@ -20,21 +20,136 @@ body {
 .section { margin-bottom:30px; }
 .section-title { color:#2c3e50; font-size:18px; font-weight:600; margin-bottom:15px; }
 .input-row { display:flex; gap:10px; margin-bottom:15px; }
-.input-group { flex:1; }
+.input-group { flex:1; position:relative; }
 label { display:block; margin-bottom:6px; color:#34495e; font-weight:500; font-size:14px; }
+.helper-text { display:block; margin-bottom:6px; color:#7f8c8d; font-size:11px; font-style:italic; }
 select, input[type="number"] {
   width:100%; padding:12px; border:1px solid #bdc3c7; border-radius:12px;
   font-size:16px; appearance:none; background:white;
   -webkit-appearance: none; -moz-appearance: none;
 }
+
+/* Style picker iOS */
+.ios-picker {
+  position: relative;
+  width: 100%;
+  height: 50px;
+  overflow: hidden;
+  border: 1px solid #bdc3c7;
+  border-radius: 12px;
+  background: #f8f9fa;
+  cursor: pointer;
+}
+.ios-picker-display {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+  user-select: none;
+}
+.ios-picker-modal {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
+  z-index: 1000;
+  padding: 20px;
+  max-height: 400px;
+}
+.ios-picker-modal.show { display: block; animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+.picker-title { font-weight: 600; color: #2c3e50; }
+.picker-done { color: #3498db; font-weight: 600; cursor: pointer; }
+.picker-wheel-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  height: 250px;
+  overflow: hidden;
+  position: relative;
+}
+.picker-wheel {
+  flex: 1;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  padding: 100px 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.picker-wheel::-webkit-scrollbar { display: none; }
+.picker-option {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  font-size: 18px;
+  color: #7f8c8d;
+  transition: all 0.2s;
+}
+.picker-selection-indicator {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 50px;
+  margin-top: -25px;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  pointer-events: none;
+  background: rgba(52, 152, 219, 0.05);
+}
+.picker-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+.picker-overlay.show { display: block; }
+
 select:focus, input:focus { outline:none; border-color:#3498db; }
 button {
   width:100%; padding:14px; background:#2c3e50; color:white; border:none; border-radius:12px;
   font-size:16px; font-weight:500; cursor:pointer; margin-top:10px; transition:0.2s;
 }
 button:hover { background:#34495e; }
+button.secondary {
+  background: #95a5a6;
+  margin-top: 10px;
+}
+button.secondary:hover { background: #7f8c8d; }
 .results { display:none; margin-top:30px; }
 .results.show { display:block; }
+.current-pace {
+  background: #3498db;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.current-pace-label { font-size: 14px; opacity: 0.9; margin-bottom: 5px; }
+.current-pace-value { font-size: 32px; font-weight: 700; }
+.current-pace-unit { font-size: 14px; opacity: 0.9; margin-top: 5px; }
 .predictions { background:#f8f9fa; padding:20px; border-radius:8px; margin-bottom:20px; border:1px solid #e0e0e0; }
 .predictions h3 { color:#2c3e50; font-size:16px; margin-bottom:15px; font-weight:600; }
 .prediction-item { display:grid; grid-template-columns:120px 1fr 1fr; gap:15px; padding:12px 0; border-bottom:1px solid #e0e0e0; align-items:center; }
@@ -63,6 +178,7 @@ button:hover { background:#34495e; }
 
     <div class="input-group">
       <label>Distance de course</label>
+      <span class="helper-text">Sélectionnez la distance parcourue</span>
       <select id="distance">
         <option value="1000">1 km</option>
         <option value="3000">3 km</option>
@@ -76,42 +192,205 @@ button:hover { background:#34495e; }
       <input type="number" id="customDistance" class="custom-distance" step="0.01" placeholder="Entrez votre distance (km)">
     </div>
 
+    <label style="margin-top:20px; margin-bottom:6px; display:block;">Temps réalisé</label>
+    <span class="helper-text">Entrez votre temps de course</span>
     <div class="input-row">
       <div class="input-group">
         <label>Heures</label>
-        <select id="hours"></select>
+        <div class="ios-picker" id="hoursPicker">
+          <div class="ios-picker-display" id="hoursDisplay">0</div>
+        </div>
       </div>
       <div class="input-group">
         <label>Minutes</label>
-        <select id="minutes"></select>
+        <div class="ios-picker" id="minutesPicker">
+          <div class="ios-picker-display" id="minutesDisplay">0</div>
+        </div>
       </div>
       <div class="input-group">
         <label>Secondes</label>
-        <select id="seconds"></select>
+        <div class="ios-picker" id="secondsPicker">
+          <div class="ios-picker-display" id="secondsDisplay">0</div>
+        </div>
       </div>
     </div>
 
     <button onclick="calculate()">Calculer</button>
+    <button class="secondary" onclick="clearResults()">Effacer les résultats</button>
   </div>
 
   <div class="results" id="results">
+    <div class="current-pace">
+      <div class="current-pace-label">Votre allure moyenne</div>
+      <div class="current-pace-value" id="currentPaceValue">--</div>
+      <div class="current-pace-unit">min/km</div>
+    </div>
+
     <div class="predictions">
       <h3>🎯 Estimations de temps par distances</h3>
       <div id="predictions"></div>
     </div>
 
     <div class="vo2max-box">
-      <div class="vo2max-label">Votre VO2max</div>
+      <div class="vo2max-label">Estimation de VO2max</div>
       <div class="vo2max-value" id="vo2maxValue">--</div>
       <div class="vo2max-unit">ml/kg/min</div>
     </div>
   </div>
 </div>
 
+<!-- Modals pour les pickers -->
+<div class="picker-overlay" id="pickerOverlay"></div>
+<div class="ios-picker-modal" id="hoursModal">
+  <div class="picker-header">
+    <div class="picker-title">Heures</div>
+    <div class="picker-done" onclick="closePicker('hours')">OK</div>
+  </div>
+  <div class="picker-wheel-container">
+    <div class="picker-selection-indicator"></div>
+    <div class="picker-wheel" id="hoursWheel"></div>
+  </div>
+</div>
+
+<div class="ios-picker-modal" id="minutesModal">
+  <div class="picker-header">
+    <div class="picker-title">Minutes</div>
+    <div class="picker-done" onclick="closePicker('minutes')">OK</div>
+  </div>
+  <div class="picker-wheel-container">
+    <div class="picker-selection-indicator"></div>
+    <div class="picker-wheel" id="minutesWheel"></div>
+  </div>
+</div>
+
+<div class="ios-picker-modal" id="secondsModal">
+  <div class="picker-header">
+    <div class="picker-title">Secondes</div>
+    <div class="picker-done" onclick="closePicker('seconds')">OK</div>
+  </div>
+  <div class="picker-wheel-container">
+    <div class="picker-selection-indicator"></div>
+    <div class="picker-wheel" id="secondsWheel"></div>
+  </div>
+</div>
+
 <script>
-// Remplissage roulette
-for(let i=0;i<=10;i++){ document.getElementById('hours').innerHTML+=`<option value="${i}">${i}</option>`; }
-for(let i=0;i<60;i++){ document.getElementById('minutes').innerHTML+=`<option value="${i}">${i}</option>`; document.getElementById('seconds').innerHTML+=`<option value="${i}">${i}</option>`; }
+// Variables globales pour les valeurs sélectionnées
+let selectedHours = 0;
+let selectedMinutes = 0;
+let selectedSeconds = 0;
+
+// Initialisation des pickers iOS
+function initIOSPickers() {
+  const hoursWheel = document.getElementById('hoursWheel');
+  const minutesWheel = document.getElementById('minutesWheel');
+  const secondsWheel = document.getElementById('secondsWheel');
+
+  // Remplir les roues
+  for(let i = 0; i <= 10; i++) {
+    hoursWheel.innerHTML += `<div class="picker-option" data-value="${i}">${i}</div>`;
+  }
+  for(let i = 0; i < 60; i++) {
+    minutesWheel.innerHTML += `<div class="picker-option" data-value="${i}">${i}</div>`;
+    secondsWheel.innerHTML += `<div class="picker-option" data-value="${i}">${i}</div>`;
+  }
+
+  // Événements de défilement
+  setupWheelScroll('hours', hoursWheel);
+  setupWheelScroll('minutes', minutesWheel);
+  setupWheelScroll('seconds', secondsWheel);
+
+  // Événements de clic sur les pickers
+  document.getElementById('hoursPicker').onclick = () => openPicker('hours');
+  document.getElementById('minutesPicker').onclick = () => openPicker('minutes');
+  document.getElementById('secondsPicker').onclick = () => openPicker('seconds');
+  document.getElementById('pickerOverlay').onclick = () => closeAllPickers();
+}
+
+function setupWheelScroll(type, wheel) {
+  let isScrolling;
+  wheel.addEventListener('scroll', function() {
+    clearTimeout(isScrolling);
+    isScrolling = setTimeout(function() {
+      snapToNearest(type, wheel);
+    }, 50);
+  });
+}
+
+function snapToNearest(type, wheel) {
+  const options = wheel.querySelectorAll('.picker-option');
+  const wheelRect = wheel.getBoundingClientRect();
+  const centerY = wheelRect.top + wheelRect.height / 2;
+  
+  let closestOption = null;
+  let closestDistance = Infinity;
+  
+  options.forEach(option => {
+    const rect = option.getBoundingClientRect();
+    const optionCenterY = rect.top + rect.height / 2;
+    const distance = Math.abs(centerY - optionCenterY);
+    
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestOption = option;
+    }
+  });
+  
+  if (closestOption) {
+    const value = parseInt(closestOption.dataset.value);
+    if (type === 'hours') selectedHours = value;
+    if (type === 'minutes') selectedMinutes = value;
+    if (type === 'seconds') selectedSeconds = value;
+    
+    // Scroll vers l'option la plus proche
+    closestOption.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function openPicker(type) {
+  const modal = document.getElementById(type + 'Modal');
+  const overlay = document.getElementById('pickerOverlay');
+  const wheel = document.getElementById(type + 'Wheel');
+  
+  modal.classList.add('show');
+  overlay.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  
+  // Positionner sur la valeur actuelle
+  setTimeout(() => {
+    let currentValue;
+    if (type === 'hours') currentValue = selectedHours;
+    if (type === 'minutes') currentValue = selectedMinutes;
+    if (type === 'seconds') currentValue = selectedSeconds;
+    
+    const options = wheel.querySelectorAll('.picker-option');
+    options[currentValue].scrollIntoView({ block: 'center' });
+  }, 100);
+}
+
+function closePicker(type) {
+  const modal = document.getElementById(type + 'Modal');
+  const overlay = document.getElementById('pickerOverlay');
+  const display = document.getElementById(type + 'Display');
+  
+  modal.classList.remove('show');
+  overlay.classList.remove('show');
+  document.body.style.overflow = '';
+  
+  // Mettre à jour l'affichage
+  if (type === 'hours') display.textContent = selectedHours;
+  if (type === 'minutes') display.textContent = selectedMinutes;
+  if (type === 'seconds') display.textContent = selectedSeconds;
+}
+
+function closeAllPickers() {
+  ['hours', 'minutes', 'seconds'].forEach(type => {
+    const modal = document.getElementById(type + 'Modal');
+    if (modal.classList.contains('show')) {
+      closePicker(type);
+    }
+  });
+}
 
 // Distance "Autre"
 const distanceSelect = document.getElementById('distance');
@@ -120,7 +399,7 @@ distanceSelect.addEventListener('change',()=>{
   if(distanceSelect.value==='other'){ customDistance.style.display='block'; } else { customDistance.style.display='none'; }
 });
 
-// Formules VO2max
+// Formules VO2max avec ajustement marathon
 function calculateVO2(v){ return -4.60 + 0.182258*v + 0.000104*v**2; }
 function calculatePercentVO2Max(t){ return 0.8 + 0.1894393*Math.exp(-0.012778*t)+0.2989558*Math.exp(-0.1932605*t); }
 function calculateVDOT(distance, tSec){
@@ -128,12 +407,21 @@ function calculateVDOT(distance, tSec){
   const v = distance / tMin;
   return calculateVO2(v)/calculatePercentVO2Max(tMin);
 }
-function predictTime(vdot,distance){
+function predictTime(vdot, distance){
   let low=60, high=36000, bestTime=low;
+  
+  // Ajustement spécifique pour le marathon (facteur de fatigue)
+  let adjustedVdot = vdot;
+  if(distance >= 42195) {
+    adjustedVdot = vdot * 0.96; // Réduction de ~4% pour tenir compte de la fatigue
+  }
+  
   for(let i=0;i<100;i++){
-    const mid=(low+high)/2; const test=calculateVDOT(distance, mid);
-    if(Math.abs(test-vdot)<0.01){ bestTime=mid; break; }
-    if(test>vdot){ low=mid; }else{ high=mid; } bestTime=mid;
+    const mid=(low+high)/2; 
+    const test=calculateVDOT(distance, mid);
+    if(Math.abs(test-adjustedVdot)<0.01){ bestTime=mid; break; }
+    if(test>adjustedVdot){ low=mid; }else{ high=mid; } 
+    bestTime=mid;
   }
   return bestTime;
 }
@@ -147,11 +435,16 @@ function calculate(){
     if(isNaN(distance)||distance<=0){ alert('Entrez une distance valide'); return; }
   }
 
-  const h=parseInt(document.getElementById('hours').value)||0;
-  const m=parseInt(document.getElementById('minutes').value)||0;
-  const s=parseInt(document.getElementById('seconds').value)||0;
-  const totalSec=h*3600+m*60+s;
+  const h = selectedHours;
+  const m = selectedMinutes;
+  const s = selectedSeconds;
+  const totalSec = h*3600 + m*60 + s;
+  
   if(totalSec===0){ alert('Entrez un temps valide'); return; }
+
+  // Calcul de l'allure actuelle
+  const currentPacePerKm = totalSec / (distance / 1000);
+  document.getElementById('currentPaceValue').textContent = formatPace(currentPacePerKm);
 
   const vo2max=calculateVDOT(distance,totalSec);
 
@@ -171,8 +464,22 @@ function calculate(){
   document.getElementById('results').classList.add('show');
   document.getElementById('results').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
+
+function clearResults() {
+  document.getElementById('results').classList.remove('show');
+  selectedHours = 0;
+  selectedMinutes = 0;
+  selectedSeconds = 0;
+  document.getElementById('hoursDisplay').textContent = '0';
+  document.getElementById('minutesDisplay').textContent = '0';
+  document.getElementById('secondsDisplay').textContent = '0';
+  distanceSelect.value = '5000';
+  customDistance.style.display = 'none';
+  customDistance.value = '';
+}
+
+// Initialisation au chargement
+initIOSPickers();
 </script>
 </body>
 </html>
-
-
