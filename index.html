@@ -29,6 +29,14 @@ select, input[type="number"], input[type="time"] {
 }
 select:focus, input:focus { outline:none; border-color:#3498db; }
 
+/* Style pour l'input time sur iOS pour forcer l'affichage des secondes */
+input[type="time"]::-webkit-datetime-edit-second-field {
+  display: block;
+}
+input[type="time"]::-webkit-datetime-edit-fields-wrapper {
+  display: flex;
+}
+
 button {
   width:100%; padding:14px; background:#2c3e50; color:white; border:none; border-radius:12px;
   font-size:16px; font-weight:500; cursor:pointer; margin-top:10px; transition:0.2s;
@@ -97,9 +105,10 @@ button.secondary:hover { background: #7f8c8d; }
       <label>Distance de course</label>
       <span class="helper-text">Sélectionnez la distance parcourue</span>
       <select id="distance">
+        <option value="" disabled selected>Sélectionner une distance</option>
         <option value="1000">1 km</option>
         <option value="3000">3 km</option>
-        <option value="5000" selected>5 km</option>
+        <option value="5000">5 km</option>
         <option value="10000">10 km</option>
         <option value="15000">15 km</option>
         <option value="21097.5">Semi-marathon</option>
@@ -111,8 +120,8 @@ button.secondary:hover { background: #7f8c8d; }
 
     <div class="input-group" style="margin-top:20px;">
       <label>Temps de course</label>
-      <span class="helper-text">Entrez votre temps de course</span>
-      <input type="time" id="timeInput" step="1" value="00:25:00">
+      <span class="helper-text">Entrez votre temps de course (heures:minutes:secondes)</span>
+      <input type="time" id="timeInput" step="1" value="00:00:00">
     </div>
 
     <button onclick="calculate()">Calculer</button>
@@ -178,6 +187,10 @@ function formatPace(sPerKm){ const m=Math.floor(sPerKm/60), sec=Math.round(sPerK
 
 function calculate(){
   let distance=parseFloat(distanceSelect.value);
+  if(!distanceSelect.value || distanceSelect.value===''){
+    alert('Veuillez sélectionner une distance');
+    return;
+  }
   if(distanceSelect.value==='other'){
     distance=parseFloat(customDistance.value)*1000;
     if(isNaN(distance)||distance<=0){ alert('Entrez une distance valide'); return; }
@@ -186,8 +199,12 @@ function calculate(){
   const timeValue = document.getElementById('timeInput').value;
   if(!timeValue){ alert('Entrez un temps valide'); return; }
   
-  const [hours, minutes, seconds] = timeValue.split(':').map(Number);
-  const totalSec = hours*3600 + minutes*60 + (seconds || 0);
+  const timeParts = timeValue.split(':');
+  const hours = parseInt(timeParts[0]) || 0;
+  const minutes = parseInt(timeParts[1]) || 0;
+  const seconds = parseInt(timeParts[2]) || 0;
+  
+  const totalSec = hours*3600 + minutes*60 + seconds;
   
   if(totalSec===0){ alert('Entrez un temps valide'); return; }
 
@@ -216,8 +233,8 @@ function calculate(){
 
 function clearResults() {
   document.getElementById('results').classList.remove('show');
-  document.getElementById('timeInput').value = '00:25:00';
-  distanceSelect.value = '5000';
+  document.getElementById('timeInput').value = '00:00:00';
+  distanceSelect.selectedIndex = 0; // Remet à "Sélectionner une distance"
   customDistance.style.display = 'none';
   customDistance.value = '';
 }
