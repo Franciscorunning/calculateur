@@ -23,7 +23,7 @@ body {
 .input-group { flex:1; position:relative; }
 label { display:block; margin-bottom:6px; color:#34495e; font-weight:500; font-size:14px; }
 .helper-text { display:block; margin-bottom:6px; color:#7f8c8d; font-size:11px; font-style:italic; }
-select, input[type="number"], input[type="time"] {
+select, input[type="number"] {
   width:100%; padding:12px; border:1px solid #bdc3c7; border-radius:12px;
   font-size:16px; background:white;
 }
@@ -80,7 +80,7 @@ button.secondary:hover { background: #7f8c8d; }
 .vo2max-unit { font-size:18px; opacity:0.9; margin-top:5px; }
 .custom-distance { display:none; margin-top:10px; }
 
-/* Styles pour les inputs de temps personnalisés (iOS) */
+/* Styles pour les menus déroulants de temps */
 .time-input-container {
   display: flex;
   gap: 8px;
@@ -90,29 +90,44 @@ button.secondary:hover { background: #7f8c8d; }
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 .time-input-label {
   font-size: 11px;
   color: #7f8c8d;
   margin-bottom: 4px;
   font-weight: 500;
+  text-align: center;
 }
-.time-number-input {
+.time-select {
   width: 100%;
   padding: 12px 8px;
   text-align: center;
   border: 1px solid #bdc3c7;
   border-radius: 12px;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   background: white;
+  cursor: pointer;
 }
 .time-separator {
   font-size: 24px;
   color: #7f8c8d;
   font-weight: 600;
-  padding-top: 24px;
+  padding-top: 20px;
+}
+
+.error-message {
+  background: #e74c3c;
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 15px;
+  text-align: center;
+  font-weight: 500;
+  display: none;
+}
+.error-message.show {
+  display: block;
 }
 
 @media(max-width:768px){ 
@@ -158,24 +173,32 @@ button.secondary:hover { background: #7f8c8d; }
 
     <div class="input-group">
       <label>Temps de course</label>
-      <span class="helper-text">Entrez votre temps de course (heures:minutes:secondes)</span>
+      <span class="helper-text">Sélectionnez votre temps de course</span>
       <div class="time-input-container">
         <div class="time-input-group">
           <span class="time-input-label">Heures</span>
-          <input type="number" id="hoursInput" class="time-number-input" min="0" max="23" value="0">
+          <select id="hoursInput" class="time-select">
+            <!-- Options générées par JavaScript -->
+          </select>
         </div>
         <span class="time-separator">:</span>
         <div class="time-input-group">
           <span class="time-input-label">Minutes</span>
-          <input type="number" id="minutesInput" class="time-number-input" min="0" max="59" value="0">
+          <select id="minutesInput" class="time-select">
+            <!-- Options générées par JavaScript -->
+          </select>
         </div>
         <span class="time-separator">:</span>
         <div class="time-input-group">
           <span class="time-input-label">Secondes</span>
-          <input type="number" id="secondsInput" class="time-number-input" min="0" max="59" value="0">
+          <select id="secondsInput" class="time-select">
+            <!-- Options générées par JavaScript -->
+          </select>
         </div>
       </div>
     </div>
+
+    <div class="error-message" id="errorMessage"></div>
 
     <button onclick="calculate()">Calculer</button>
     <button class="secondary" onclick="clearResults()">Effacer les résultats</button>
@@ -202,44 +225,85 @@ button.secondary:hover { background: #7f8c8d; }
 </div>
 
 <script>
+// Initialisation des menus déroulants de temps
+function initializeTimeSelects() {
+  const hoursSelect = document.getElementById('hoursInput');
+  const minutesSelect = document.getElementById('minutesInput');
+  const secondsSelect = document.getElementById('secondsInput');
+
+  // Heures (0-23)
+  for(let i = 0; i <= 23; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i.toString().padStart(2, '0');
+    hoursSelect.appendChild(option);
+  }
+
+  // Minutes (0-59)
+  for(let i = 0; i <= 59; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i.toString().padStart(2, '0');
+    minutesSelect.appendChild(option);
+  }
+
+  // Secondes (0-59)
+  for(let i = 0; i <= 59; i++) {
+    const option = document.createElement('option');
+    option.value = i;
+    option.textContent = i.toString().padStart(2, '0');
+    secondsSelect.appendChild(option);
+  }
+}
+
+// Appel de l'initialisation au chargement
+initializeTimeSelects();
+
 // Distance "Autre"
 const distanceSelect = document.getElementById('distance');
 const customDistance = document.getElementById('customDistance');
 distanceSelect.addEventListener('change',()=>{
-  if(distanceSelect.value==='other'){ customDistance.style.display='block'; } else { customDistance.style.display='none'; }
+  if(distanceSelect.value==='other'){ 
+    customDistance.style.display='block'; 
+  } else { 
+    customDistance.style.display='none'; 
+  }
 });
 
-// Validation des inputs de temps
-document.getElementById('hoursInput').addEventListener('input', function() {
-  if(this.value > 23) this.value = 23;
-  if(this.value < 0) this.value = 0;
-});
+// Fonction pour afficher les erreurs
+function showError(message) {
+  const errorDiv = document.getElementById('errorMessage');
+  errorDiv.textContent = message;
+  errorDiv.classList.add('show');
+  document.getElementById('results').classList.remove('show');
+}
 
-document.getElementById('minutesInput').addEventListener('input', function() {
-  if(this.value > 59) this.value = 59;
-  if(this.value < 0) this.value = 0;
-});
+function hideError() {
+  document.getElementById('errorMessage').classList.remove('show');
+}
 
-document.getElementById('secondsInput').addEventListener('input', function() {
-  if(this.value > 59) this.value = 59;
-  if(this.value < 0) this.value = 0;
-});
+// Formules VO2max avec ajustement marathon à 3%
+function calculateVO2(v){ 
+  return -4.60 + 0.182258*v + 0.000104*v**2; 
+}
 
-// Formules VO2max avec ajustement marathon à 3.5%
-function calculateVO2(v){ return -4.60 + 0.182258*v + 0.000104*v**2; }
-function calculatePercentVO2Max(t){ return 0.8 + 0.1894393*Math.exp(-0.012778*t)+0.2989558*Math.exp(-0.1932605*t); }
+function calculatePercentVO2Max(t){ 
+  return 0.8 + 0.1894393*Math.exp(-0.012778*t)+0.2989558*Math.exp(-0.1932605*t); 
+}
+
 function calculateVDOT(distance, tSec){
   const tMin = tSec/60;
   const v = distance / tMin;
   return calculateVO2(v)/calculatePercentVO2Max(tMin);
 }
+
 function predictTime(vdot, distance){
   let low=60, high=36000, bestTime=low;
   
-  // Ajustement spécifique pour le marathon (facteur de fatigue de 3.5%)
+  // Ajustement spécifique pour le marathon (facteur de fatigue de 3%)
   let adjustedVdot = vdot;
   if(distance >= 42195) {
-    adjustedVdot = vdot * 0.965;
+    adjustedVdot = vdot * 0.97; // 3% au lieu de 3.5%
   }
   
   for(let i=0;i<100;i++){
@@ -251,18 +315,31 @@ function predictTime(vdot, distance){
   }
   return bestTime;
 }
-function formatTime(s){ const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.round(s%60); return h>0?`${h}h${m.toString().padStart(2,'0')}'${sec.toString().padStart(2,'0')}"`:`${m}'${sec.toString().padStart(2,'0')}"`; }
-function formatPace(sPerKm){ const m=Math.floor(sPerKm/60), sec=Math.round(sPerKm%60); return `${m}:${sec.toString().padStart(2,'0')}`; }
+
+function formatTime(s){ 
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=Math.round(s%60); 
+  return h>0?`${h}h${m.toString().padStart(2,'0')}'${sec.toString().padStart(2,'0')}"`:`${m}'${sec.toString().padStart(2,'0')}"`;
+}
+
+function formatPace(sPerKm){ 
+  const m=Math.floor(sPerKm/60), sec=Math.round(sPerKm%60); 
+  return `${m}:${sec.toString().padStart(2,'0')}`; 
+}
 
 function calculate(){
+  hideError();
+  
   let distance=parseFloat(distanceSelect.value);
   if(!distanceSelect.value || distanceSelect.value===''){
-    alert('Veuillez sélectionner une distance');
+    showError('Veuillez sélectionner une distance');
     return;
   }
   if(distanceSelect.value==='other'){
     distance=parseFloat(customDistance.value)*1000;
-    if(isNaN(distance)||distance<=0){ alert('Entrez une distance valide'); return; }
+    if(isNaN(distance)||distance<=0){ 
+      showError('Entrez une distance valide'); 
+      return; 
+    }
   }
 
   const hours = parseInt(document.getElementById('hoursInput').value) || 0;
@@ -271,18 +348,34 @@ function calculate(){
   
   const totalSec = hours*3600 + minutes*60 + seconds;
   
-  if(totalSec===0){ alert('Entrez un temps valide'); return; }
+  if(totalSec===0){ 
+    showError('Entrez un temps valide'); 
+    return; 
+  }
+
+  // Calcul du VO2max
+  const vo2max = calculateVDOT(distance, totalSec);
+
+  // Validation du VO2max (entre 15 et 91)
+  if(vo2max < 15 || vo2max > 91) {
+    showError(`VO2max calculé (${Math.round(vo2max)}) hors limites valides (15-91). Veuillez vérifier vos données.`);
+    return;
+  }
 
   // Calcul de l'allure actuelle
   const currentPacePerKm = totalSec / (distance / 1000);
   document.getElementById('currentPaceValue').textContent = formatPace(currentPacePerKm);
 
-  const vo2max=calculateVDOT(distance,totalSec);
-
   // Prédictions
-  const races=[{name:'1 km',distance:1000},{name:'3 km',distance:3000},
-  {name:'5 km',distance:5000},{name:'10 km',distance:10000},{name:'15 km',distance:15000},
-  {name:'Semi-marathon',distance:21097.5},{name:'Marathon',distance:42195}];
+  const races=[
+    {name:'1 km',distance:1000},
+    {name:'3 km',distance:3000},
+    {name:'5 km',distance:5000},
+    {name:'10 km',distance:10000},
+    {name:'15 km',distance:15000},
+    {name:'Semi-marathon',distance:21097.5},
+    {name:'Marathon',distance:42195}
+  ];
 
   let html='';
   races.forEach(r=>{
@@ -290,6 +383,7 @@ function calculate(){
     const pace=t/(r.distance/1000);
     html+=`<div class="prediction-item"><div class="prediction-distance">${r.name}</div><div class="prediction-time">${formatTime(t)}</div><div class="prediction-pace">${formatPace(pace)}/km</div></div>`;
   });
+  
   document.getElementById('predictions').innerHTML=html;
   document.getElementById('vo2maxValue').textContent=Math.round(vo2max);
   document.getElementById('results').classList.add('show');
@@ -297,10 +391,11 @@ function calculate(){
 }
 
 function clearResults() {
+  hideError();
   document.getElementById('results').classList.remove('show');
-  document.getElementById('hoursInput').value = 0;
-  document.getElementById('minutesInput').value = 0;
-  document.getElementById('secondsInput').value = 0;
+  document.getElementById('hoursInput').selectedIndex = 0;
+  document.getElementById('minutesInput').selectedIndex = 0;
+  document.getElementById('secondsInput').selectedIndex = 0;
   distanceSelect.selectedIndex = 0;
   customDistance.style.display = 'none';
   customDistance.value = '';
