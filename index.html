@@ -225,6 +225,9 @@ button.secondary:hover { background: #7f8c8d; }
 </div>
 
 <script>
+// Constante pour le facteur de fatigue marathon
+const MARATHON_FATIGUE_FACTOR = 0.971; // 2.9%
+
 // Initialisation des menus déroulants de temps
 function initializeTimeSelects() {
   const hoursSelect = document.getElementById('hoursInput');
@@ -282,7 +285,7 @@ function hideError() {
   document.getElementById('errorMessage').classList.remove('show');
 }
 
-// Formules VO2max avec ajustement marathon à 3%
+// Formules VO2max avec ajustement marathon à 2.9%
 function calculateVO2(v){ 
   return -4.60 + 0.182258*v + 0.000104*v**2; 
 }
@@ -291,24 +294,32 @@ function calculatePercentVO2Max(t){
   return 0.8 + 0.1894393*Math.exp(-0.012778*t)+0.2989558*Math.exp(-0.1932605*t); 
 }
 
-function calculateVDOT(distance, tSec){
+function calculateVDOT(distance, tSec, isMarathon = false){
   const tMin = tSec/60;
   const v = distance / tMin;
-  return calculateVO2(v)/calculatePercentVO2Max(tMin);
+  let vdot = calculateVO2(v)/calculatePercentVO2Max(tMin);
+  
+  // Si c'est un marathon, on ajuste le VDOT en l'augmentant pour compenser la fatigue
+  // Ainsi, les prédictions pour les autres distances seront plus rapides
+  if(isMarathon) {
+    vdot = vdot / MARATHON_FATIGUE_FACTOR;
+  }
+  
+  return vdot;
 }
 
-function predictTime(vdot, distance){
+function predictTime(vdot, distance, targetIsMarathon = false){
   let low=60, high=36000, bestTime=low;
   
-  // Ajustement spécifique pour le marathon (facteur de fatigue de 3%)
+  // Si la distance cible est un marathon, on applique le facteur de fatigue
   let adjustedVdot = vdot;
-  if(distance >= 42195) {
-    adjustedVdot = vdot * 0.97; // 3% au lieu de 3.5%
+  if(targetIsMarathon) {
+    adjustedVdot = vdot * MARATHON_FATIGUE_FACTOR;
   }
   
   for(let i=0;i<100;i++){
     const mid=(low+high)/2; 
-    const test=calculateVDOT(distance, mid);
+    const test=calculateVDOT(distance, mid, false); // On ne réajuste pas ici
     if(Math.abs(test-adjustedVdot)<0.01){ bestTime=mid; break; }
     if(test>adjustedVdot){ low=mid; }else{ high=mid; } 
     bestTime=mid;
@@ -353,8 +364,11 @@ function calculate(){
     return; 
   }
 
+  // Déterminer si la distance d'entrée est un marathon
+  const isInputMarathon = (distance >= 42195);
+
   // Calcul du VO2max
-  const vo2max = calculateVDOT(distance, totalSec);
+  const vo2max = calculateVDOT(distance, totalSec, isInputMarathon);
 
   // Validation du VO2max (entre 15 et 91)
   if(vo2max < 15 || vo2max > 91) {
@@ -368,18 +382,18 @@ function calculate(){
 
   // Prédictions
   const races=[
-    {name:'1 km',distance:1000},
-    {name:'3 km',distance:3000},
-    {name:'5 km',distance:5000},
-    {name:'10 km',distance:10000},
-    {name:'15 km',distance:15000},
-    {name:'Semi-marathon',distance:21097.5},
-    {name:'Marathon',distance:42195}
+    {name:'1 km',distance:1000, isMarathon: false},
+    {name:'3 km',distance:3000, isMarathon: false},
+    {name:'5 km',distance:5000, isMarathon: false},
+    {name:'10 km',distance:10000, isMarathon: false},
+    {name:'15 km',distance:15000, isMarathon: false},
+    {name:'Semi-marathon',distance:21097.5, isMarathon: false},
+    {name:'Marathon',distance:42195, isMarathon: true}
   ];
 
   let html='';
   races.forEach(r=>{
-    const t=predictTime(vo2max,r.distance);
+    const t=predictTime(vo2max, r.distance, r.isMarathon);
     const pace=t/(r.distance/1000);
     html+=`<div class="prediction-item"><div class="prediction-distance">${r.name}</div><div class="prediction-time">${formatTime(t)}</div><div class="prediction-pace">${formatPace(pace)}/km</div></div>`;
   });
