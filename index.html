@@ -23,7 +23,7 @@ body {
 .input-group { flex:1; position:relative; }
 label { display:block; margin-bottom:6px; color:#34495e; font-weight:500; font-size:14px; }
 .helper-text { display:block; margin-bottom:6px; color:#7f8c8d; font-size:11px; font-style:italic; }
-select, input[type="number"] {
+select, input[type="number"], input[type="text"] {
   width:100%; padding:12px; border:1px solid #bdc3c7; border-radius:12px;
   font-size:16px; background:white;
 }
@@ -39,6 +39,30 @@ button.secondary {
   margin-top: 10px;
 }
 button.secondary:hover { background: #7f8c8d; }
+
+/* Styles pour les boutons CTA */
+.cta-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #ecf0f1;
+}
+button.cta-instagram {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  flex: 1;
+}
+button.cta-instagram:hover {
+  background: linear-gradient(45deg, #e08323 0%, #d6582c 25%, #cc1733 50%, #bc1356 75%, #ac0878 100%);
+}
+button.cta-email {
+  background: #27ae60;
+  flex: 1;
+}
+button.cta-email:hover {
+  background: #229954;
+}
+
 .results { display:none; margin-top:30px; }
 .results.show { display:block; }
 .current-pace {
@@ -74,7 +98,7 @@ button.secondary:hover { background: #7f8c8d; }
 .prediction-distance { color:#5a6c7d; font-weight:600; }
 .prediction-time { color:#2c3e50; font-weight:600; font-size:16px; }
 .prediction-pace { color:#7f8c8d; font-size:14px; }
-.vo2max-box { background:linear-gradient(135deg,#2c3e50 0%,#34495e 100%); color:white; padding:25px; border-radius:8px; text-align:center; margin-top:20px; }
+.vo2max-box { background:linear-gradient(135deg,#2c3e50 0%,#34495e 100%); color:white; padding:25px; border-radius:8px; text-align:center; margin-bottom:20px; }
 .vo2max-label { font-size:14px; opacity:0.9; margin-bottom:8px; }
 .vo2max-value { font-size:48px; font-weight:700; }
 .vo2max-unit { font-size:18px; opacity:0.9; margin-top:5px; }
@@ -131,8 +155,14 @@ button.secondary:hover { background: #7f8c8d; }
 }
 
 @media(max-width:768px){ 
-  .container{padding:20px;} 
+  .container{padding:20px; max-width:100%;} 
   .input-row{flex-direction:column;} 
+  
+  /* Boutons CTA en colonne sur mobile */
+  .cta-buttons {
+    flex-direction: column;
+  }
+  
   .prediction-item{grid-template-columns:1fr; gap:5px;} 
   .vo2max-value{font-size:36px;} 
 }
@@ -167,7 +197,7 @@ button.secondary:hover { background: #7f8c8d; }
           <option value="42195">Marathon</option>
           <option value="other">Autre</option>
         </select>
-        <input type="number" id="customDistance" class="custom-distance" step="0.01" placeholder="Entrez votre distance (km)">
+        <input type="text" id="customDistance" class="custom-distance" placeholder="Distance en km (ex: 8.15 ou 8,15)">
       </div>
     </div>
 
@@ -221,6 +251,16 @@ button.secondary:hover { background: #7f8c8d; }
       <div class="vo2max-value" id="vo2maxValue">--</div>
       <div class="vo2max-unit">ml/kg/min</div>
     </div>
+  </div>
+
+  <!-- Boutons CTA -->
+  <div class="cta-buttons">
+    <button class="cta-instagram" onclick="window.open('https://www.instagram.com/francisco.running/', '_blank')">
+      📸 Suivez-moi sur Instagram
+    </button>
+    <button class="cta-email" onclick="window.location.href='mailto:info@performancerunning.ch?subject=Demande de plan d\'entrainement'">
+      📧 Plan d'entraînement personnalisé
+    </button>
   </div>
 </div>
 
@@ -346,11 +386,16 @@ function calculate(){
     return;
   }
   if(distanceSelect.value==='other'){
-    distance=parseFloat(customDistance.value)*1000;
-    if(isNaN(distance)||distance<=0){ 
-      showError('Entrez une distance valide'); 
+    // Récupérer la distance personnalisée et remplacer virgule par point
+    const customValue = customDistance.value.replace(',', '.');
+    const distanceKm = parseFloat(customValue);
+    
+    if(isNaN(distanceKm)||distanceKm<=0){ 
+      showError('Entrez une distance valide (ex: 8.15 ou 8,15)'); 
       return; 
     }
+    
+    distance = distanceKm * 1000; // Convertir en mètres
   }
 
   const hours = parseInt(document.getElementById('hoursInput').value) || 0;
@@ -417,5 +462,3 @@ function clearResults() {
 </script>
 </body>
 </html>
-
-
